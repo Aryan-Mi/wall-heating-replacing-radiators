@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 DATA_DIR = "data"
-OUTPUT_DIR = "src/01-visualize-floorplans/output"
+OUTPUT_DIR = "outputs/01-visualize-floorplans"
 
 
 def load_data(load_dir: str, bid: str) -> tuple[np.ndarray, np.ndarray]:
