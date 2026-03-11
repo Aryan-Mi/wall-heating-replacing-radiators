@@ -28,7 +28,7 @@ From repository root:
 ```bash
 python3 src/02-reference-benchmark-and-visualization/run_tasks_2_3.py --subset 10 --repeats 3 --plot-count 3
 ```
-
+    
 Optional arguments:
 
 - `--data-dir` (default: `data`)
