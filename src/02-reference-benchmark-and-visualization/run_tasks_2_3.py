@@ -1,4 +1,5 @@
-"""Task 2 + 3: benchmark reference simulation and visualize outputs.
+"""
+Task 2 + 3: benchmark reference simulation and visualize outputs.
 
 This script keeps the reference Jacobi implementation from simulate.py,
 runs it on a subset of floorplans, times repeated batch runs for reliability,
@@ -25,7 +26,9 @@ def load_data(load_dir: str, bid: str) -> tuple[np.ndarray, np.ndarray]:
     return u, interior_mask
 
 
-def jacobi(u: np.ndarray, interior_mask: np.ndarray, max_iter: int, atol: float = 1e-6) -> np.ndarray:
+def jacobi(
+    u: np.ndarray, interior_mask: np.ndarray, max_iter: int, atol: float = 1e-6
+) -> np.ndarray:
     # Reference implementation logic from simulate.py.
     u = np.copy(u)
 
@@ -59,8 +62,12 @@ def discover_building_ids(data_dir: Path) -> list[str]:
     if ids_file.exists():
         return ids_file.read_text().splitlines()
 
-    domain_ids = {p.name.removesuffix("_domain.npy") for p in data_dir.glob("*_domain.npy")}
-    interior_ids = {p.name.removesuffix("_interior.npy") for p in data_dir.glob("*_interior.npy")}
+    domain_ids = {
+        p.name.removesuffix("_domain.npy") for p in data_dir.glob("*_domain.npy")
+    }
+    interior_ids = {
+        p.name.removesuffix("_interior.npy") for p in data_dir.glob("*_interior.npy")
+    }
     return sorted(domain_ids & interior_ids)
 
 
@@ -76,7 +83,9 @@ def run_reference_batch(
     return all_u
 
 
-def building_bbox(domain: np.ndarray, interior_mask: np.ndarray) -> tuple[int, int, int, int, np.ndarray]:
+def building_bbox(
+    domain: np.ndarray, interior_mask: np.ndarray
+) -> tuple[int, int, int, int, np.ndarray]:
     wall_mask = np.isclose(domain, 5.0) | np.isclose(domain, 25.0)
     building_mask = interior_mask | wall_mask
 
@@ -142,7 +151,10 @@ def save_simulation_plots(
 
 
 def write_stats_csv(
-    building_ids: list[str], all_u: np.ndarray, all_interior_mask: np.ndarray, output_csv: Path
+    building_ids: list[str],
+    all_u: np.ndarray,
+    all_interior_mask: np.ndarray,
+    output_csv: Path,
 ) -> None:
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     stat_keys = ["mean_temp", "std_temp", "pct_above_18", "pct_below_15"]
@@ -156,10 +168,18 @@ def write_stats_csv(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Task 2+3 reference benchmark and visualization")
-    parser.add_argument("--subset", type=int, default=10, help="Number of floorplans to simulate")
-    parser.add_argument("--repeats", type=int, default=3, help="Number of repeated batch timings")
-    parser.add_argument("--plot-count", type=int, default=3, help="How many floorplans to plot")
+    parser = argparse.ArgumentParser(
+        description="Task 2+3 reference benchmark and visualization"
+    )
+    parser.add_argument(
+        "--subset", type=int, default=10, help="Number of floorplans to simulate"
+    )
+    parser.add_argument(
+        "--repeats", type=int, default=3, help="Number of repeated batch timings"
+    )
+    parser.add_argument(
+        "--plot-count", type=int, default=3, help="How many floorplans to plot"
+    )
     parser.add_argument("--max-iter", type=int, default=20_000)
     parser.add_argument("--atol", type=float, default=1e-4)
     parser.add_argument("--data-dir", default="data")
@@ -174,7 +194,8 @@ def main() -> None:
 
     all_ids = discover_building_ids(data_dir)
     if not all_ids:
-        raise ValueError(f"No floorplans found in {data_dir}")
+        msg = f"No floorplans found in {data_dir}"
+        raise ValueError(msg)
 
     subset_n = min(args.subset, len(all_ids))
     subset_ids = all_ids[:subset_n]
@@ -221,16 +242,28 @@ def main() -> None:
     timing_csv.parent.mkdir(parents=True, exist_ok=True)
     with timing_csv.open("w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["subset_size", "repeats", "mean_batch_seconds", "stdev_batch_seconds", "seconds_per_floorplan", "num_all_floorplans", "estimated_all_seconds"])
-        writer.writerow([
-            subset_n,
-            args.repeats,
-            f"{mean_batch:.6f}",
-            f"{stdev_batch:.6f}",
-            f"{seconds_per_floorplan:.6f}",
-            len(all_ids),
-            f"{estimate_all:.6f}",
-        ])
+        writer.writerow(
+            [
+                "subset_size",
+                "repeats",
+                "mean_batch_seconds",
+                "stdev_batch_seconds",
+                "seconds_per_floorplan",
+                "num_all_floorplans",
+                "estimated_all_seconds",
+            ]
+        )
+        writer.writerow(
+            [
+                subset_n,
+                args.repeats,
+                f"{mean_batch:.6f}",
+                f"{stdev_batch:.6f}",
+                f"{seconds_per_floorplan:.6f}",
+                len(all_ids),
+                f"{estimate_all:.6f}",
+            ]
+        )
 
     print("\nTiming summary")
     print(f"Subset size: {subset_n}")
