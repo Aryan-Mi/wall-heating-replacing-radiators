@@ -3,6 +3,8 @@ import sys
 
 import numpy as np
 
+from line_profiler import profile # For Kernprof profiling. 
+
 def load_data(load_dir, bid):
     """
         Loads the floor plan domain (the floor plan with cold and hot walls indicated by pixel values) 
@@ -26,6 +28,7 @@ def load_data(load_dir, bid):
     
     return u, interior_mask
 
+@profile # For Kernprof. Command: uv run python -m kernprof -l -v simulate.py
 def jacobi(u, interior_mask, max_iter, atol=1e-6):
     """
         Performs Jacobi iterations for the simulation.
