@@ -1,0 +1,16 @@
+#!/bin/bash
+#BSUB -J wallheat_timing
+#BSUB -q hpc
+#BSUB -n 1
+#BSUB -W 00:20
+#BSUB -R "rusage[mem=4GB]"
+#BSUB -oo outputs/02-reference-benchmark-and-visualization/lsf/%J.out
+#BSUB -eo outputs/02-reference-benchmark-and-visualization/lsf/%J.err
+
+set -euo pipefail
+
+cd "$LS_SUBCWD"
+python3 src/02-reference-benchmark-and-visualization/run_tasks_2_3.py \
+  --subset 10 \
+  --repeats 5 \
+  --plot-count 3

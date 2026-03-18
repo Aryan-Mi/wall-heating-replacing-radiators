@@ -1,0 +1,73 @@
+Run 1/5: 85.521 s
+Run 2/5: 85.081 s
+Run 3/5: 86.890 s
+Run 4/5: 86.820 s
+Run 5/5: 86.962 s
+
+Timing summary
+Subset size: 10
+Total floorplans available: 10
+Batch runs: 5
+Batch times [s]: 85.521, 85.081, 86.890, 86.820, 86.962
+Mean batch time [s]: 86.255
+Std. dev. [s]: 0.886
+Estimated time for all floorplans [s]: 86.255
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28052398: <wallheat_timing> in cluster <dcc> Done
+
+Job <wallheat_timing> was submitted from host <gbarlogin1> by user <s175008> in cluster <dcc> at Wed Mar 18 10:32:10 2026
+Job was executed on host(s) <n-62-28-29>, in queue <hpc>, as user <s175008> in cluster <dcc> at Wed Mar 18 10:32:10 2026
+</zhome/72/d/128400> was used as the home directory.
+</zhome/72/d/128400/wall-heating-replacing-radiators> was used as the working directory.
+Started at Wed Mar 18 10:32:10 2026
+Terminated at Wed Mar 18 10:39:29 2026
+Results reported at Wed Mar 18 10:39:29 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J wallheat_timing
+#BSUB -q hpc
+#BSUB -n 1
+#BSUB -W 00:20
+#BSUB -R "rusage[mem=4GB]"
+#BSUB -oo outputs/02-reference-benchmark-and-visualization/lsf/%J.out
+#BSUB -eo outputs/02-reference-benchmark-and-visualization/lsf/%J.err
+
+set -euo pipefail
+
+cd "$LS_SUBCWD"
+python3 src/02-reference-benchmark-and-visualization/run_tasks_2_3.py \
+  --subset 10 \
+  --repeats 5 \
+  --plot-count 3
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   432.91 sec.
+    Max Memory :                                 99 MB
+    Average Memory :                             88.80 MB
+    Total Requested Memory :                     4096.00 MB
+    Delta Memory :                               3997.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   439 sec.
+    Turnaround time :                            439 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <outputs/02-reference-benchmark-and-visualization/lsf/28052398.err> for stderr output of this job.
+

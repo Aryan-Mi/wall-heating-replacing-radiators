@@ -1,2 +1,2 @@
 subset_size,repeats,mean_batch_seconds,stdev_batch_seconds,seconds_per_floorplan,num_all_floorplans,estimated_all_seconds
-10,3,44.770738,0.118208,4.477074,10,44.770738
+10,5,86.254817,0.885813,8.625482,10,86.254817

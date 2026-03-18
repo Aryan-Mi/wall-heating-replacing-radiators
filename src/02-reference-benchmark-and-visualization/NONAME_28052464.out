@@ -1,0 +1,44 @@
+mkdir: cannot create directory ‘outputs’: Permission denied
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28052464: <NONAME> in cluster <dcc> Exited
+
+Job <NONAME> was submitted from host <gbarlogin1> by user <s175008> in cluster <dcc> at Wed Mar 18 10:44:23 2026
+Job was executed on host(s) <n-62-11-63>, in queue <hpc>, as user <s175008> in cluster <dcc> at Wed Mar 18 10:44:25 2026
+</zhome/72/d/128400> was used as the home directory.
+</zhome/72/d/128400/wall-heating-replacing-radiators/src/02-reference-benchmark-and-visualization> was used as the working directory.
+Started at Wed Mar 18 10:44:25 2026
+Terminated at Wed Mar 18 10:44:26 2026
+Results reported at Wed Mar 18 10:44:26 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+set -euo pipefail
+
+cd "$(dirname "$0")/../.."
+mkdir -p outputs/02-reference-benchmark-and-visualization/lsf
+bsub < src/02-reference-benchmark-and-visualization/timing_job.lsf
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   0.62 sec.
+    Max Memory :                                 -
+    Average Memory :                             -
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              -
+    Max Threads :                                -
+    Run time :                                   1 sec.
+    Turnaround time :                            3 sec.
+
+The output (if any) is above this job summary.
+
