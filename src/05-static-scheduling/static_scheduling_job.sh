@@ -1,7 +1,7 @@
 #!/bin/bash
 #BSUB -J wallheat_static
 #BSUB -q hpc
-#BSUB -n 32
+#BSUB -n 64
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=2GB]"
 #BSUB -W 01:00

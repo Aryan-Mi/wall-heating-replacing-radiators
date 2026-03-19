@@ -2,7 +2,7 @@
 Task 6: Benchmark dynamic scheduling parallelization.
 
 Measures speedup of multiprocessing Pool-based dynamic scheduling
-across worker counts [1, 2, 4, 8, 16, 32] for a subset of floorplans.
+across worker counts for a subset of floorplans.
 Compares results against static scheduling from Task 5.
 """
 
@@ -18,7 +18,7 @@ import time
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-WORKER_COUNTS = (1, 2, 4, 8, 16, 32)
+WORKER_COUNTS = (1, 2, 4, 8, 16, 32, 64)
 
 
 def time_simulation(n_floorplans: int, n_workers: int, data_dir: str) -> float:
