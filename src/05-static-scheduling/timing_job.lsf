@@ -1,0 +1,18 @@
+#!/bin/bash
+#BSUB -J wallheat_static
+#BSUB -q hpc
+#BSUB -n 32
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=2GB]"
+#BSUB -W 01:00
+#BSUB -oo outputs/05-static-scheduling/lsf/%J.out
+#BSUB -eo outputs/05-static-scheduling/lsf/%J.err
+
+set -euo pipefail
+
+cd "$LS_SUBCWD"
+
+python3 src/05-static-scheduling/run_task_5.py \
+  --subset 100 \
+  --data-dir /dtu/projects/02613_2025/data/modified_swiss_dwellings/ \
+  --output-dir outputs/05-static-scheduling
