@@ -7,7 +7,6 @@
 #BSUB -W 01:00
 #BSUB -oo outputs/05-static-scheduling/%J.out
 #BSUB -eo outputs/05-static-scheduling/%J.err
-#BSUB -R "select[model==XeonGold6226R]"
 
 set -euo pipefail
 
