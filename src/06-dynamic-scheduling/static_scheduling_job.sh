@@ -14,7 +14,7 @@ set -euo pipefail
 cd "$LS_SUBCWD"
 mkdir -p outputs/06-dynamic-scheduling
 
-python3 src/06-dynamic-scheduling/run_task_6.py \
+python src/06-dynamic-scheduling/run_task_6.py \
   --subset 100 \
   --data-dir /dtu/projects/02613_2025/data/modified_swiss_dwellings/ \
   --output-dir outputs/06-dynamic-scheduling \
