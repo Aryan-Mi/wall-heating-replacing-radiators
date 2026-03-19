@@ -5,12 +5,13 @@
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=2GB]"
 #BSUB -W 01:00
-#BSUB -oo outputs/06-dynamic-scheduling/lsf/%J.out
-#BSUB -eo outputs/06-dynamic-scheduling/lsf/%J.err
+#BSUB -oo outputs/06-dynamic-scheduling/%J.out
+#BSUB -eo outputs/06-dynamic-scheduling/%J.err
 
 set -euo pipefail
 
 cd "$LS_SUBCWD"
+mkdir -p outputs/06-dynamic-scheduling
 
 python3 src/06-dynamic-scheduling/run_task_6.py \
   --subset 100 \

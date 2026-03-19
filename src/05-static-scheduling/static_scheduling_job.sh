@@ -5,12 +5,13 @@
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=2GB]"
 #BSUB -W 01:00
-#BSUB -oo outputs/05-static-scheduling/lsf/%J.out
-#BSUB -eo outputs/05-static-scheduling/lsf/%J.err
+#BSUB -oo outputs/05-static-scheduling/%J.out
+#BSUB -eo outputs/05-static-scheduling/%J.err
 
 set -euo pipefail
 
 cd "$LS_SUBCWD"
+mkdir -p outputs/05-static-scheduling
 
 python3 src/05-static-scheduling/run_task_5.py \
   --subset 100 \
