@@ -7,6 +7,7 @@
 #BSUB -W 01:00
 #BSUB -oo outputs/06-dynamic-scheduling/%J.out
 #BSUB -eo outputs/06-dynamic-scheduling/%J.err
+#BSUB -R "select[model==XeonGold6226R]"
 
 set -euo pipefail
 
