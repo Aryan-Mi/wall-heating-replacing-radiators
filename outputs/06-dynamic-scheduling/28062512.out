@@ -1,0 +1,89 @@
+Running with 1 worker(s)...
+  1 workers: 734.728 s
+Running with 2 worker(s)...
+  2 workers: 367.170 s
+Running with 4 worker(s)...
+  4 workers: 191.687 s
+Running with 8 worker(s)...
+  8 workers: 100.621 s
+Running with 16 worker(s)...
+  16 workers: 58.502 s
+Running with 32 worker(s)...
+  32 workers: 38.817 s
+Running with 64 worker(s)...
+  64 workers: 37.400 s
+
+Dynamic scheduling speedup summary:
+  P= 1: T=734.728s, S=1.00x  (vs static: 28.899s faster)
+  P= 2: T=367.170s, S=2.00x  (vs static: 51.837s faster)
+  P= 4: T=191.687s, S=3.83x  (vs static: 22.268s faster)
+  P= 8: T=100.621s, S=7.30x  (vs static: 43.851s faster)
+  P=16: T=58.502s, S=12.56x  (vs static: 21.306s faster)
+  P=32: T=38.817s, S=18.93x  (vs static: 15.584s faster)
+  P=64: T=37.400s, S=19.65x  (vs static: 5.803s faster)
+
+Best: P=64 (37.400s for 100 floorplans)
+Per-floorplan: 0.374s
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28062512: <wallheat_dynamic> in cluster <dcc> Done
+
+Job <wallheat_dynamic> was submitted from host <n-62-27-23> by user <s204489> in cluster <dcc> at Thu Mar 19 22:57:46 2026
+Job was executed on host(s) <64*n-62-13-7>, in queue <hpc>, as user <s204489> in cluster <dcc> at Fri Mar 20 08:28:33 2026
+</zhome/5a/8/156627> was used as the home directory.
+</zhome/5a/8/156627/wall-heating-replacing-radiators> was used as the working directory.
+Started at Fri Mar 20 08:28:33 2026
+Terminated at Fri Mar 20 08:54:03 2026
+Results reported at Fri Mar 20 08:54:03 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J wallheat_dynamic
+#BSUB -q hpc
+#BSUB -n 64
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=2GB]"
+#BSUB -W 01:00
+#BSUB -oo outputs/06-dynamic-scheduling/%J.out
+#BSUB -eo outputs/06-dynamic-scheduling/%J.err
+
+set -euo pipefail
+
+cd "$LS_SUBCWD"
+mkdir -p outputs/06-dynamic-scheduling
+
+python src/06-dynamic-scheduling/run_task_6.py \
+  --subset 100 \
+  --data-dir /dtu/projects/02613_2025/data/modified_swiss_dwellings/ \
+  --output-dir outputs/06-dynamic-scheduling \
+  --static-csv outputs/05-static-scheduling/timing_results.csv
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   5978.42 sec.
+    Max Memory :                                 290 MB
+    Average Memory :                             130.23 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               130782.00 MB
+    Max Swap :                                   -
+    Max Processes :                              21
+    Max Threads :                                25
+    Run time :                                   1530 sec.
+    Turnaround time :                            35777 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <outputs/06-dynamic-scheduling/28062512.err> for stderr output of this job.
+

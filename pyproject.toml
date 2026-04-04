@@ -85,6 +85,7 @@ lint.ignore = [
   "TC003",
   "W293",
 ]
+line-length = 120
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true

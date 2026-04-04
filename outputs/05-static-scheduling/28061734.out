@@ -1,0 +1,90 @@
+Running with 1 worker(s)...
+  1 workers: 1197.321 s
+Running with 2 worker(s)...
+  2 workers: 642.637 s
+Running with 4 worker(s)...
+  4 workers: 340.648 s
+Running with 8 worker(s)...
+  8 workers: 274.681 s
+Running with 16 worker(s)...
+  16 workers: 171.575 s
+Running with 32 worker(s)...
+  32 workers: 141.533 s
+
+Speedup summary:
+  P= 1: T=1197.321s, S=1.00x
+  P= 2: T=642.637s, S=1.86x
+  P= 4: T=340.648s, S=3.51x
+  P= 8: T=274.681s, S=4.36x
+  P=16: T=171.575s, S=6.98x
+  P=32: T=141.533s, S=8.46x
+
+Best: P=32 (141.533s for 100 floorplans)
+Per-floorplan: 1.415s
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28061734: <wallheat_static> in cluster <dcc> Done
+
+Job <wallheat_static> was submitted from host <n-62-30-1> by user <s204489> in cluster <dcc> at Thu Mar 19 16:59:46 2026
+Job was executed on host(s) <32*n-62-12-8>, in queue <hpc>, as user <s204489> in cluster <dcc> at Thu Mar 19 17:44:01 2026
+</zhome/5a/8/156627> was used as the home directory.
+</zhome/5a/8/156627/wall-heating-replacing-radiators> was used as the working directory.
+Started at Thu Mar 19 17:44:01 2026
+Terminated at Thu Mar 19 18:30:16 2026
+Results reported at Thu Mar 19 18:30:16 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J wallheat_static
+#BSUB -q hpc
+#BSUB -n 32
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=2GB]"
+#BSUB -W 01:00
+#BSUB -oo outputs/05-static-scheduling/%J.out
+#BSUB -eo outputs/05-static-scheduling/%J.err
+#BSUB -R "select[model==XeonGold6226R]"
+
+set -euo pipefail
+
+cd "$LS_SUBCWD"
+mkdir -p outputs/05-static-scheduling
+
+# Init Python environment
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate 02613
+
+python src/05-static-scheduling/run_task_5.py \
+  --subset 100 \
+  --data-dir /dtu/projects/02613_2025/data/modified_swiss_dwellings/ \
+  --output-dir outputs/05-static-scheduling
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   9114.71 sec.
+    Max Memory :                                 400 MB
+    Average Memory :                             151.60 MB
+    Total Requested Memory :                     65536.00 MB
+    Delta Memory :                               65136.00 MB
+    Max Swap :                                   -
+    Max Processes :                              37
+    Max Threads :                                41
+    Run time :                                   2775 sec.
+    Turnaround time :                            5430 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <outputs/05-static-scheduling/28061734.err> for stderr output of this job.
+

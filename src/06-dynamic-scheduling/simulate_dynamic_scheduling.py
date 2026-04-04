@@ -1,7 +1,8 @@
+from glob import glob
+from multiprocessing import Pool
 from os.path import join
 import sys
 
-from line_profiler import profile  # For Kernprof profiling.
 import numpy as np
 
 
@@ -20,22 +21,16 @@ def load_data(load_dir, bid):
         interior_mask (512, 512): The mask indicating where the interior lies.
 
     """
-    # 1. Initialize: Input image width / height
     SIZE = 512
 
-    # 2. Prepad floor plan domain
     u = np.zeros((SIZE + 2, SIZE + 2))  # Pre-pad with a 1-pixel border to simplify Jacobi iterations.
-    u[1:-1, 1:-1] = np.load(
-        join(load_dir, f"{bid}_domain.npy")
-    )  # Overlay the domain image on u. U is now the padded domain image
+    u[1:-1, 1:-1] = np.load(join(load_dir, f"{bid}_domain.npy"))
 
-    # 3. Load interior mask
     interior_mask = np.load(join(load_dir, f"{bid}_interior.npy"))
 
     return u, interior_mask
 
 
-@profile  # For Kernprof. Command: uv run python -m kernprof -l -v simulate.py
 def jacobi(u, interior_mask, max_iter, atol=1e-6):
     """
     Perform Jacobi iterations for the simulation.
@@ -57,12 +52,8 @@ def jacobi(u, interior_mask, max_iter, atol=1e-6):
 
     # Jacobi iterations: Iterating up to max_iter times
     for _ in range(max_iter):
-        # ** 1. Compute average of left, right, up and down neighbors, see the second equation in the pdf
+        # 1. Compute average of left, right, up and down neighbors, see the second equation in the pdf
         # Note that u is prepadded, hence the 1:-1 indexing to skip the padding.
-        # u[1:-1, :-2]: i,j-1 (left neighbor).
-        # u[1:-1, 2:]: i,j+1 (right neighbor
-        # u[:-2, 1:-1]: i-1,j (up neighbor)
-        # u[2:, 1:-1]: i+1,j (down neighbor)
         u_new = 0.25 * (u[1:-1, :-2] + u[1:-1, 2:] + u[:-2, 1:-1] + u[2:, 1:-1])
 
         # 2. Calculate delta for stopping criterion
@@ -111,38 +102,78 @@ def summary_stats(u, interior_mask):
     }
 
 
+def discover_building_ids(data_dir):
+    """
+    Discover available building IDs from the data directory.
+
+    Reads building_ids.txt if present, otherwise globs *_domain.npy files.
+
+    Args:
+        data_dir (str): Path to the data directory.
+
+    Returns:
+        list[str]: Sorted list of building ID strings.
+
+    """
+    ids_file = join(data_dir, "building_ids.txt")
+    try:
+        with open(ids_file) as f:
+            return f.read().splitlines()
+    except FileNotFoundError:
+        domain_files = glob(join(data_dir, "*_domain.npy"))
+        return sorted(f.split("/")[-1].removesuffix("_domain.npy") for f in domain_files)
+
+
+def process_building(args):
+    """
+    Worker function: load, solve, and summarize a single building.
+
+    Each worker independently loads data from disk, runs the Jacobi solver,
+    and computes summary statistics. This avoids pickling large numpy arrays.
+
+    Args:
+        args: Tuple of (load_dir, bid, max_iter, atol).
+
+    Returns:
+        Tuple of (bid, stats_dict).
+
+    """
+    load_dir, bid, max_iter, atol = args
+    u, interior_mask = load_data(load_dir, bid)
+    u = jacobi(u, interior_mask, max_iter, atol)
+    stats = summary_stats(u, interior_mask)
+    return (bid, stats)
+
+
 if __name__ == "__main__":
-    # 1. Preparation
-    # 1.1 Load data
-    LOAD_DIR = "/dtu/projects/02613_2025/data/modified_swiss_dwellings/"
-    with open(join(LOAD_DIR, "building_ids.txt")) as f:
-        building_ids = f.read().splitlines()
+    # 1. Parse arguments: N (floorplan count), P (worker count), DATA_DIR
+    DEFAULT_DATA_DIR = "/dtu/projects/02613_2025/data/modified_swiss_dwellings/"
 
     N = 1 if len(sys.argv) < 2 else int(sys.argv[1])
+    P = 1 if len(sys.argv) < 3 else int(sys.argv[2])
+    LOAD_DIR = DEFAULT_DATA_DIR if len(sys.argv) < 4 else sys.argv[3]
+
+    # 2. Discover and select building IDs
+    building_ids = discover_building_ids(LOAD_DIR)
     building_ids = building_ids[:N]
 
-    # 1.2. Load floor plans and interior masks for all building IDs.
-    all_u0 = np.empty((N, 514, 514))
-    all_interior_mask = np.empty((N, 512, 512), dtype="bool")
-    for i, bid in enumerate(building_ids):
-        u0, interior_mask = load_data(LOAD_DIR, bid)
-        all_u0[i] = u0
-        all_interior_mask[i] = interior_mask
-
-    # 2. Run jacobi iterations for each floor plan
+    # 3. Build work items (lightweight tuples — no large arrays cross process boundaries)
     MAX_ITER = 20_000
     ABS_TOL = 1e-4
+    work_items = tuple((LOAD_DIR, bid, MAX_ITER, ABS_TOL) for bid in building_ids)
 
-    all_u = np.empty_like(
-        all_u0
-    )  # all_u shares the same shape as all_u0, but will store the updated floor plan domains after Jacobi iterations.
-    for i, (u0, interior_mask) in enumerate(zip(all_u0, all_interior_mask)):
-        u = jacobi(u0, interior_mask, MAX_ITER, ABS_TOL)
-        all_u[i] = u
+    # 4. Run simulation: sequential or parallel with dynamic scheduling
+    #    Dynamic scheduling uses chunksize=1 so that each floorplan is dispatched
+    #    individually to the next available worker. This handles varying convergence
+    #    times better than static scheduling.
+    if P <= 1:
+        results = [process_building(item) for item in work_items]
+    else:
+        with Pool(processes=P) as pool:
+            results = pool.map(process_building, work_items, chunksize=1)
 
-    # 3. Print summary statistics in CSV format
+    # 5. Print summary statistics in CSV format (order preserved by pool.map)
     stat_keys = ["mean_temp", "std_temp", "pct_above_18", "pct_below_15"]
-    print("building_id, " + ", ".join(stat_keys))  # CSV header
-    for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
-        stats = summary_stats(u, interior_mask)
+    print("building_id, " + ", ".join(stat_keys))
+    for bid, stats in results:
         print(f"{bid},", ", ".join(str(stats[k]) for k in stat_keys))
