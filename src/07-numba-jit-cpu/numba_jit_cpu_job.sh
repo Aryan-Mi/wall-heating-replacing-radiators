@@ -7,7 +7,7 @@
 #BSUB -oo outputs/07-numba-jit-cpu/%J.out
 #BSUB -eo outputs/07-numba-jit-cpu/%J.err
 
-set -euo pipefail
+set -eo pipefail
 cd "$LS_SUBCWD"
 mkdir -p outputs/07-numba-jit-cpu
 

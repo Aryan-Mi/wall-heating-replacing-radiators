@@ -1,0 +1,77 @@
+No GPU on this node, CUDA module not loaded
+Running Numba JIT CPU simulation on N=10 floorplans...
+  Wall time (incl. JIT compile): 38.901 s
+  Internal time (post-warmup):    36.432 s
+  Per-floorplan:                  3.643 s
+  Estimated for all 4571:        16653 s (~277.6 min)
+
+Comparison vs reference (NumPy, Task 2):
+  Reference:  8.625 s/floorplan
+  Numba JIT:  3.643 s/floorplan
+  Speedup:    2.4x
+
+Results written to outputs/07-numba-jit-cpu/
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 28297004: <wallheat_numba_jit_cpu> in cluster <dcc> Done
+
+Job <wallheat_numba_jit_cpu> was submitted from host <hpclogin1> by user <s254355> in cluster <dcc> at Sun Apr 26 18:58:52 2026
+Job was executed on host(s) <n-62-31-5>, in queue <hpc>, as user <s254355> in cluster <dcc> at Sun Apr 26 18:58:53 2026
+</zhome/70/5/224711> was used as the home directory.
+</zhome/70/5/224711/wall-heating-replacing-radiators> was used as the working directory.
+Started at Sun Apr 26 18:58:53 2026
+Terminated at Sun Apr 26 18:59:36 2026
+Results reported at Sun Apr 26 18:59:36 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J wallheat_numba_jit_cpu
+#BSUB -q hpc
+#BSUB -n 1
+#BSUB -R "rusage[mem=4GB]"
+#BSUB -W 00:20
+#BSUB -oo outputs/07-numba-jit-cpu/%J.out
+#BSUB -eo outputs/07-numba-jit-cpu/%J.err
+
+set -eo pipefail
+cd "$LS_SUBCWD"
+mkdir -p outputs/07-numba-jit-cpu
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate 02613
+
+python src/07-numba-jit-cpu/run_task_7.py \
+  --subset 10 \
+  --data-dir /dtu/projects/02613_2025/data/modified_swiss_dwellings/ \
+  --output-dir outputs/07-numba-jit-cpu \
+  --reference-csv outputs/02-reference-benchmark-and-visualization/timing_summary.csv
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   40.79 sec.
+    Max Memory :                                 167 MB
+    Average Memory :                             167.00 MB
+    Total Requested Memory :                     4096.00 MB
+    Delta Memory :                               3929.00 MB
+    Max Swap :                                   -
+    Max Processes :                              5
+    Max Threads :                                6
+    Run time :                                   43 sec.
+    Turnaround time :                            44 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <outputs/07-numba-jit-cpu/28297004.err> for stderr output of this job.
+
