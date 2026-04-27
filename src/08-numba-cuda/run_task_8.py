@@ -30,7 +30,23 @@ def time_simulation(n_floorplans: int, data_dir: str) -> tuple[float, float]:
     script = Path(__file__).parent / "simulate_numba_cuda.py"
     cmd = [sys.executable, str(script), str(n_floorplans), data_dir]
     t0 = time.perf_counter()
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    except subprocess.CalledProcessError as exc:
+        stderr = (exc.stderr or "").strip()
+        stdout = (exc.stdout or "").strip()
+        details = []
+        if stderr:
+            details.append(f"stderr:\n{stderr}")
+        if stdout:
+            details.append(f"stdout:\n{stdout}")
+        details_text = "\n\n".join(details) if details else "No child process output captured."
+        raise RuntimeError(
+            "Numba CUDA simulation subprocess failed.\n"
+            f"Command: {' '.join(cmd)}\n"
+            f"Return code: {exc.returncode}\n\n"
+            f"{details_text}"
+        ) from exc
     wall = time.perf_counter() - t0
 
     internal = wall

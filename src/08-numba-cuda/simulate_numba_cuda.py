@@ -55,11 +55,12 @@ def discover_building_ids(data_dir):
 
 
 @cuda.jit
-def _jacobi_kernel(u, u_new, interior_mask):
+def _jacobi_kernel(u, u_new, interior_mask_u8):
     """One Jacobi iteration: each thread updates one interior cell."""
     i, j = cuda.grid(2)
     if i < 512 and j < 512:
-        if interior_mask[i, j]:
+        # uint8 mask avoids potential bool device-array instability on some stacks.
+        if interior_mask_u8[i, j] != 0:
             u_new[i + 1, j + 1] = 0.25 * (
                 u[i + 1, j] + u[i + 1, j + 2] + u[i, j + 1] + u[i + 2, j + 1]
             )
@@ -69,16 +70,20 @@ def _jacobi_kernel(u, u_new, interior_mask):
 
 
 def jacobi_numba_cuda(u, interior_mask, max_iter):
+    # Keep dtypes/layout explicit to reduce CUDA JIT/runtime edge cases.
+    u = np.ascontiguousarray(u, dtype=np.float32)
+    interior_mask_u8 = np.ascontiguousarray(interior_mask, dtype=np.uint8)
+
     # Both device buffers initialised from u so ghost rows are preserved after swaps.
     d_u = cuda.to_device(u)
     d_u_new = cuda.to_device(u.copy())
-    d_mask = cuda.to_device(interior_mask)
+    d_mask_u8 = cuda.to_device(interior_mask_u8)
 
     bpg = (math.ceil(512 / _TPB), math.ceil(512 / _TPB))
     tpb = (_TPB, _TPB)
 
     for _ in range(max_iter):
-        _jacobi_kernel[bpg, tpb](d_u, d_u_new, d_mask)
+        _jacobi_kernel[bpg, tpb](d_u, d_u_new, d_mask_u8)
         d_u, d_u_new = d_u_new, d_u  # double-buffer swap
 
     cuda.synchronize()
@@ -92,6 +97,16 @@ if __name__ == "__main__":
     LOAD_DIR = DEFAULT_DATA_DIR if len(sys.argv) < 3 else sys.argv[2]
 
     building_ids = discover_building_ids(LOAD_DIR)[:N]
+    if not building_ids:
+        raise SystemExit(f"No floorplans found in data dir: {LOAD_DIR}")
+
+    if not cuda.is_available():
+        print(
+            "Numba CUDA is not available in this environment. "
+            "Run on a GPU node with a visible CUDA driver (e.g. via module load + uv run).",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
     all_u0 = []
     all_masks = []

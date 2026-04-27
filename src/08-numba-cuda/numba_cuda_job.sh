@@ -2,9 +2,13 @@
 #BSUB -J wallheat_numba_cuda
 #BSUB -q gpua100
 #BSUB -gpu "num=1:mode=exclusive_process"
-#BSUB -n 1
+#BSUB -n 4
+#BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=4GB]"
 #BSUB -W 00:20
+#BSUB -u s254355@dtu.dk
+#BSUB -B
+#BSUB -N
 #BSUB -oo outputs/08-numba-cuda/%J.out
 #BSUB -eo outputs/08-numba-cuda/%J.err
 
