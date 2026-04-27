@@ -26,16 +26,20 @@ echo "=== nsys profile: CuPy ORIGINAL (Task 9) ==="
 nsys profile \
   --output outputs/10-nsys-cupy/nsys_original \
   --force-overwrite true \
-  --trace cuda,nvtx \
   python src/09-cupy/simulate_cupy.py 1 "$DATA_DIR"
+
+echo "=== nsys stats: CuPy ORIGINAL ==="
+nsys stats outputs/10-nsys-cupy/nsys_original.nsys-rep
 
 # 2. Profile the OPTIMIZED script to confirm syncs are eliminated
 echo "=== nsys profile: CuPy OPTIMIZED (Task 10) ==="
 nsys profile \
   --output outputs/10-nsys-cupy/nsys_optimized \
   --force-overwrite true \
-  --trace cuda,nvtx \
   python src/10-nsys-cupy/simulate_cupy_optimized.py 1 "$DATA_DIR"
+
+echo "=== nsys stats: CuPy OPTIMIZED ==="
+nsys stats outputs/10-nsys-cupy/nsys_optimized.nsys-rep
 
 # 3. Benchmark: optimized vs original on N=10 floorplans
 echo "=== Timing benchmark: N=10 ==="

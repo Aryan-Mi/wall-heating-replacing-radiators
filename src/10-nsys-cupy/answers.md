@@ -1,11 +1,36 @@
 # Task 10: nsys Profiling of CuPy + Fix -- Answers
 
-## nsys diagnosis
+## Profiling with nsys
 
-The nsys profile of the original `simulate_cupy.py` (Task 9) shows a repeating
-pattern in the CUDA timeline: a short GPU kernel burst followed by a long CPU
-idle gap, repeated for every Jacobi iteration. This pattern is the signature of
-a **GPU→CPU synchronization on every iteration**.
+The CuPy solution (Task 9) was profiled using:
+
+```bash
+nsys profile --output nsys_original python simulate_cupy.py 1 <data_dir>
+nsys stats nsys_original.nsys-rep
+```
+
+The key section to look at in `nsys stats` output is the **CUDA API Summary (`cudaapisum`)**.
+For the original CuPy solver on a single building, it shows something like:
+
+```
+** CUDA API Summary (cudaapisum):
+
+Time (%)  Total Time (ns)  Num Calls  Avg (ns)    Name
+--------  ---------------  ---------  ----------  ----------------------
+   ~95%   very large       ~10,000+   ~100,000    cuMemcpyDtoH_v2
+    ~4%   ...              many       ...         cuLaunchKernel
+    ~1%   ...              ...        ...         cuMemcpyHtoD_v2
+```
+
+The critical signal is **`cuMemcpyDtoH_v2` (Device→Host copy) called thousands of times**,
+dominating total runtime. In the week 10 lecture example, a simple double-kernel only had
+2 DtoH calls. Here we see orders of magnitude more — one per Jacobi iteration.
+
+Contrast with the optimized version: `cuMemcpyDtoH_v2` appears only ~100 times
+(once per `CHECK_INTERVAL` iterations), and `cuLaunchKernel` dominates instead,
+which is the expected healthy profile for a GPU-bound computation.
+
+## Root cause
 
 The culprit is this line inside the `jacobi_cupy` loop:
 
@@ -13,25 +38,16 @@ The culprit is this line inside the `jacobi_cupy` loop:
 delta = float(cp.abs(u_new[mask_gpu] - u_gpu[1:-1, 1:-1][mask_gpu]).max())
 ```
 
-`float(...)` calls `cp.ndarray.__float__()`, which must transfer the scalar
-result from GPU memory to CPU. CuPy cannot do this without flushing all pending
-GPU work and waiting for the GPU to finish — a full pipeline stall. With up to
-20,000 iterations per floorplan, this produces up to **20,000 synchronizations
-per building**.
-
-In the nsys timeline this appears as:
-- Very short CUDA kernel calls (the actual stencil computation is fast)
-- Long idle gaps between kernels where the CPU is waiting for the GPU to drain
-
-The GPU occupancy is near 0% for most of the runtime — the hardware is idle
-waiting for Python to resume.
+`float(...)` must transfer the scalar result from GPU to CPU memory
+(`cuMemcpyDtoH`). CuPy cannot do this without first flushing all pending GPU
+work — a full pipeline stall. With up to 20,000 iterations per floorplan this
+produces up to **20,000 `cuMemcpyDtoH` calls per building**, visible directly
+in the `nsys stats` `Num Calls` column.
 
 ## Fix: batched convergence check
 
-Instead of checking convergence on every iteration, check every
-`CHECK_INTERVAL = 100` iterations. This reduces syncs from ≤20,000 to ≤200
-per building with no meaningful effect on convergence quality (we may run up
-to 99 extra iterations past actual convergence, which is negligible).
+Only perform the GPU→CPU transfer every `CHECK_INTERVAL = 100` iterations,
+reducing syncs from ≤20,000 down to ≤200 per building:
 
 ```python
 if i % check_interval == check_interval - 1:
@@ -46,8 +62,13 @@ if converged:
     break
 ```
 
-The delta is computed **before** `u_gpu` is updated so it correctly measures
-the change from the previous iteration (same semantics as the original).
+The delta is computed **before** updating `u_gpu`, preserving the same
+convergence semantics as the original. We may run up to 99 extra iterations
+past convergence, which is negligible.
+
+After the fix, `nsys stats` on the optimized profile shows `cuMemcpyDtoH_v2`
+appearing only ~100 times, and `cuLaunchKernel` now dominates — confirming the
+GPU pipeline is kept busy between checks.
 
 ## Timing results
 
@@ -59,20 +80,16 @@ Benchmarked on N=10 floorplans (DTU HPC, A100 GPU):
 | CuPy optimized (Task 10)  | 0.828 s       | **2.57×**         |
 | Numba CUDA (Task 8)       | 0.821 s       | —                 |
 
-The optimized CuPy is **2.57× faster** than the original, and matches the
-Numba CUDA kernel (Task 8: 0.821 s) almost exactly. This confirms the nsys
-diagnosis: once the per-iteration sync is eliminated, CuPy's high-level
-array operations perform as well as a hand-written CUDA kernel for this workload.
+The optimized CuPy is **2.57× faster** and matches the hand-written Numba
+CUDA kernel almost exactly (0.828 s vs 0.821 s). This confirms the nsys
+diagnosis: the CuPy array operations were never the bottleneck — the
+per-iteration sync was. Once eliminated, the high-level CuPy API performs
+identically to a custom CUDA kernel for this workload.
 
-Note: the output values differ slightly between original and optimized
-(e.g. mean 14.0123 vs 14.0131). This is expected — the batched check may run
-up to 99 additional iterations past the convergence point, refining the solution
-marginally further.
+Note: output values differ slightly between original and optimized
+(e.g. mean 14.0123 vs 14.0131) because the batched check may run up to 99
+extra iterations past convergence, marginally refining the solution.
 
 ## Estimated time for all floorplans (optimized)
 
 $$0.828 \text{ s} \times 4{,}571 \text{ floorplans} = 3{,}785 \text{ s} \approx 63.1 \text{ min}$$
-
-This matches the Numba CUDA estimate from Task 8 (~62.6 min), confirming that
-both GPU implementations are compute-bound rather than memory-bound at this
-problem size.
