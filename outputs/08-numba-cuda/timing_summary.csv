@@ -1,0 +1,2 @@
+subset_size,wall_seconds,internal_seconds,seconds_per_floorplan,num_all_floorplans,estimated_all_seconds,reference_seconds_per_floorplan,speedup_vs_reference
+10,9.603607,8.213680,0.821368,4571,3754.47,8.625482,10.50
