@@ -1,7 +1,8 @@
 """
-Task 7: Jacobi solver accelerated with Numba JIT (single CPU core).
+Task 10: CuPy Jacobi solver with batched convergence check to eliminate
+per-iteration GPU→CPU synchronizations.
 
-CLI: python simulate_numba_jit_cpu.py N [data_dir]
+CLI: python simulate_cupy_optimized.py N [data_dir]
 
 Prints CSV rows to stdout, timing to stderr as TIMING_SECONDS=<value>.
 """
@@ -11,11 +12,12 @@ import sys
 import time
 from os.path import join
 
-import numba
+import cupy as cp
 import numpy as np
 
 MAX_ITER = 20_000
 ABS_TOL = 1e-4
+CHECK_INTERVAL = 100  # only sync GPU→CPU every this many iterations
 
 
 def load_data(load_dir, bid):
@@ -50,26 +52,32 @@ def discover_building_ids(data_dir):
         return sorted(f.split("/")[-1].removesuffix("_domain.npy") for f in domain_files)
 
 
-@numba.njit
-def jacobi_numba(u, interior_mask, max_iter, atol=1e-6):
-    u = u.copy()
-    u_new = u.copy()
-    for _ in range(max_iter):
-        delta = 0.0
-        for i in range(512):
-            for j in range(512):
-                if interior_mask[i, j]:
-                    val = 0.25 * (u[i + 1, j] + u[i + 1, j + 2] + u[i, j + 1] + u[i + 2, j + 1])
-                    d = val - u[i + 1, j + 1]
-                    if d < 0.0:
-                        d = -d
-                    if d > delta:
-                        delta = d
-                    u_new[i + 1, j + 1] = val
-        u, u_new = u_new, u  # swap buffers — no data copy; non-interior cells stay correct in both
-        if delta < atol:
+def jacobi_cupy_optimized(u, interior_mask, max_iter, atol=1e-4, check_interval=CHECK_INTERVAL):
+    u_gpu = cp.asarray(u)
+    mask_gpu = cp.asarray(interior_mask)
+
+    for i in range(max_iter):
+        u_new = 0.25 * (
+            u_gpu[1:-1, :-2] + u_gpu[1:-1, 2:]
+            + u_gpu[:-2, 1:-1] + u_gpu[2:, 1:-1]
+        )
+
+        # Only transfer delta to CPU every check_interval iterations.
+        # This reduces GPU→CPU synchronizations from up to 20,000 down to ~200,
+        # keeping the GPU pipeline full between checks.
+        if i % check_interval == check_interval - 1:
+            delta = float(cp.abs(u_new[mask_gpu] - u_gpu[1:-1, 1:-1][mask_gpu]).max())
+            converged = delta < atol
+        else:
+            converged = False
+
+        u_gpu[1:-1, 1:-1] = cp.where(mask_gpu, u_new, u_gpu[1:-1, 1:-1])
+
+        if converged:
             break
-    return u
+
+    cp.cuda.Stream.null.synchronize()
+    return cp.asnumpy(u_gpu)
 
 
 if __name__ == "__main__":
@@ -87,13 +95,13 @@ if __name__ == "__main__":
         all_u0.append(u0)
         all_masks.append(mask)
 
-    # Warmup: trigger JIT compilation before the timed section
-    jacobi_numba(all_u0[0], all_masks[0], 1)
+    # Warmup: trigger CuPy kernel compilation before the timed section
+    jacobi_cupy_optimized(all_u0[0], all_masks[0], 1)
 
     t0 = time.perf_counter()
     results = []
     for bid, u0, mask in zip(building_ids, all_u0, all_masks):
-        u_final = jacobi_numba(u0, mask, MAX_ITER, ABS_TOL)
+        u_final = jacobi_cupy_optimized(u0, mask, MAX_ITER, ABS_TOL)
         stats = summary_stats(u_final, mask)
         results.append((bid, stats))
     elapsed = time.perf_counter() - t0
