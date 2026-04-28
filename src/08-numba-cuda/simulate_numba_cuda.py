@@ -64,9 +64,9 @@ def _jacobi_kernel(u, u_new, interior_mask_u8):
             u_new[i + 1, j + 1] = 0.25 * (
                 u[i + 1, j] + u[i + 1, j + 2] + u[i, j + 1] + u[i + 2, j + 1]
             )
-        else:
-            # wall / fixed-BC cell: copy value unchanged
-            u_new[i + 1, j + 1] = u[i + 1, j + 1]
+        # Non-interior cells (walls, exterior) are never written: both buffers were
+        # initialised from the same u, and boundary conditions are fixed, so the
+        # double-buffer swap preserves their values without any explicit copy.
 
 
 def jacobi_numba_cuda(u, interior_mask, max_iter):
