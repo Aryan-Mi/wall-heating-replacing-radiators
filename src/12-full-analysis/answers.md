@@ -14,7 +14,7 @@ temperatures, while buildings dominated by cold load-bearing walls cluster lower
 ## 12b) Average mean temperature
 
 ```
-Average mean interior temperature: TBD °C
+Average mean interior temperature: 14.6942 °C
 ```
 
 *(Fill in after running `full_run_job.sh`.)*
@@ -22,7 +22,7 @@ Average mean interior temperature: TBD °C
 ## 12c) Average temperature standard deviation
 
 ```
-Average std dev: TBD °C
+Average std dev: 6.8016 °C
 ```
 
 A higher std dev indicates more uneven heating — hot spots near inside walls
@@ -31,7 +31,7 @@ and cold spots near load-bearing walls.
 ## 12d) Buildings with ≥50% area above 18°C
 
 ```
-Buildings ≥50% above 18°C: TBD / 4571  (TBD%)
+Buildings ≥50% above 18°C: 804 / 4571  (17.6%)
 ```
 
 Buildings above this threshold are well-heated. The Wall Heating approach is
@@ -41,7 +41,7 @@ floor area.
 ## 12e) Buildings with ≥50% area below 15°C
 
 ```
-Buildings ≥50% below 15°C: TBD / 4571  (TBD%)
+Buildings ≥50% below 15°C: 2471 / 4571  (54.1%)
 ```
 
 Buildings above this threshold have more than half their area at uncomfortably
