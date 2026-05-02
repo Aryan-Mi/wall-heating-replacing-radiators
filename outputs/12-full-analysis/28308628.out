@@ -1,0 +1,7 @@
+Total buildings processed: 4571
+
+12b) Average mean temperature:        14.6942 °C
+12c) Average temperature std dev:     6.8016 °C
+12d) Buildings with ≥50% area above 18°C: 804 (17.6%)
+12e) Buildings with ≥50% area below 15°C: 2471 (54.1%)
+Histograms saved to outputs/12-full-analysis/histograms.png

@@ -1,0 +1,12 @@
+Running Numba CUDA simulation on N=10 floorplans...
+  Wall time (incl. CUDA JIT compile): 9.751 s
+  Internal time (post-warmup):         8.354 s
+  Per-floorplan:                       0.835 s
+  Estimated for all 4571:           3819 s (~63.6 min)
+
+Comparison vs reference (NumPy, Task 2):
+  Reference:   8.625 s/floorplan
+  Numba CUDA:  0.835 s/floorplan
+  Speedup:     10.3x
+
+Results written to outputs/08-numba-cuda/
