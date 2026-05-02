@@ -7,9 +7,9 @@ Prints CSV rows to stdout, timing to stderr as TIMING_SECONDS=<value>.
 """
 
 from glob import glob
+from os.path import join
 import sys
 import time
-from os.path import join
 
 import cupy as cp
 import numpy as np
@@ -55,10 +55,7 @@ def jacobi_cupy(u, interior_mask, max_iter, atol=1e-6):
     mask_gpu = cp.asarray(interior_mask)
 
     for _ in range(max_iter):
-        u_new = 0.25 * (
-            u_gpu[1:-1, :-2] + u_gpu[1:-1, 2:]
-            + u_gpu[:-2, 1:-1] + u_gpu[2:, 1:-1]
-        )
+        u_new = 0.25 * (u_gpu[1:-1, :-2] + u_gpu[1:-1, 2:] + u_gpu[:-2, 1:-1] + u_gpu[2:, 1:-1])
         delta = float(cp.abs(u_new[mask_gpu] - u_gpu[1:-1, 1:-1][mask_gpu]).max())
         u_gpu[1:-1, 1:-1] = cp.where(mask_gpu, u_new, u_gpu[1:-1, 1:-1])
         if delta < atol:

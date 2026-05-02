@@ -1,6 +1,4 @@
-"""
-Task 7: Benchmark Numba JIT CPU Jacobi solver and compare to NumPy reference.
-"""
+"""Task 7: Benchmark Numba JIT CPU Jacobi solver and compare to NumPy reference."""
 
 from __future__ import annotations
 
@@ -129,7 +127,7 @@ def main() -> None:
 
     if ref_spf is not None:
         speedup = ref_spf / spf
-        print(f"\nComparison vs reference (NumPy, Task 2):")
+        print("\nComparison vs reference (NumPy, Task 2):")
         print(f"  Reference:  {ref_spf:.3f} s/floorplan")
         print(f"  Numba JIT:  {spf:.3f} s/floorplan")
         print(f"  Speedup:    {speedup:.1f}x")

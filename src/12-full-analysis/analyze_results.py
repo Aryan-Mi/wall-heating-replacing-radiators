@@ -49,7 +49,9 @@ def plot_histograms(df: pd.DataFrame, output_dir: Path) -> None:
     axes[0, 0].set_xlabel("Mean temperature (°C)")
     axes[0, 0].set_ylabel("Number of buildings")
     axes[0, 0].set_title("Distribution of mean interior temperatures")
-    axes[0, 0].axvline(df["mean_temp"].mean(), color="red", linestyle="--", label=f"Mean = {df['mean_temp'].mean():.2f}°C")
+    axes[0, 0].axvline(
+        df["mean_temp"].mean(), color="red", linestyle="--", label=f"Mean = {df['mean_temp'].mean():.2f}°C"
+    )
     axes[0, 0].legend()
 
     axes[0, 1].hist(df["std_temp"], bins=50, color="#dd8452", edgecolor="white")

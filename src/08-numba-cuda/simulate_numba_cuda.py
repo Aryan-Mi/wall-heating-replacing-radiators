@@ -8,14 +8,14 @@ The kernel performs one Jacobi iteration per launch; the Python helper
 calls it for a fixed number of iterations (no early stopping).
 """
 
-import math
 from glob import glob
+import math
+from os.path import join
 import sys
 import time
-from os.path import join
 
-import numpy as np
 from numba import cuda
+import numpy as np
 
 MAX_ITER = 20_000
 
@@ -61,9 +61,7 @@ def _jacobi_kernel(u, u_new, interior_mask_u8):
     if i < 512 and j < 512:
         # uint8 mask avoids potential bool device-array instability on some stacks.
         if interior_mask_u8[i, j] != 0:
-            u_new[i + 1, j + 1] = 0.25 * (
-                u[i + 1, j] + u[i + 1, j + 2] + u[i, j + 1] + u[i + 2, j + 1]
-            )
+            u_new[i + 1, j + 1] = 0.25 * (u[i + 1, j] + u[i + 1, j + 2] + u[i, j + 1] + u[i + 2, j + 1])
         # Non-interior cells (walls, exterior) are never written: both buffers were
         # initialised from the same u, and boundary conditions are fixed, so the
         # double-buffer swap preserves their values without any explicit copy.
@@ -98,7 +96,8 @@ if __name__ == "__main__":
 
     building_ids = discover_building_ids(LOAD_DIR)[:N]
     if not building_ids:
-        raise SystemExit(f"No floorplans found in data dir: {LOAD_DIR}")
+        error_msg = f"No floorplans found in data dir: {LOAD_DIR}"
+        raise SystemExit(error_msg)
 
     if not cuda.is_available():
         print(

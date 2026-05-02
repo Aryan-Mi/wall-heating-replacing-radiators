@@ -1,6 +1,7 @@
 """
-Task 10: Benchmark CuPy optimized (batched convergence check) vs original,
-and compare nsys profiles.
+Task 10: Benchmark CuPy optimized.
+
+Batched convergence check vs original and compare nsys profiles.
 """
 
 from __future__ import annotations
@@ -89,9 +90,7 @@ def main() -> None:
     original_spf = load_reference_timing(Path(args.reference_csv))
 
     print(f"Running CuPy OPTIMIZED simulation on N={args.subset} floorplans...")
-    wall_opt, internal_opt = time_simulation(
-        here / "simulate_cupy_optimized.py", args.subset, args.data_dir
-    )
+    wall_opt, internal_opt = time_simulation(here / "simulate_cupy_optimized.py", args.subset, args.data_dir)
     spf_opt = internal_opt / args.subset
     n_all = count_all_floorplans(args.data_dir)
 
@@ -102,7 +101,7 @@ def main() -> None:
 
     if original_spf is not None:
         speedup = original_spf / spf_opt
-        print(f"\nComparison vs Task 9 CuPy (original):")
+        print("\nComparison vs Task 9 CuPy (original):")
         print(f"  Task 9 original:  {original_spf:.3f} s/floorplan")
         print(f"  Task 10 optimized:{spf_opt:.3f} s/floorplan")
         print(f"  Speedup:          {speedup:.2f}x")
@@ -118,14 +117,17 @@ def main() -> None:
         }
     ]
     if original_spf is not None:
-        rows.insert(0, {
-            "variant": "original (Task 9)",
-            "subset_size": args.subset,
-            "wall_seconds": "N/A",
-            "internal_seconds": "N/A",
-            "seconds_per_floorplan": f"{original_spf:.6f}",
-            "estimated_all_seconds": f"{original_spf * n_all:.2f}",
-        })
+        rows.insert(
+            0,
+            {
+                "variant": "original (Task 9)",
+                "subset_size": args.subset,
+                "wall_seconds": "N/A",
+                "internal_seconds": "N/A",
+                "seconds_per_floorplan": f"{original_spf:.6f}",
+                "estimated_all_seconds": f"{original_spf * n_all:.2f}",
+            },
+        )
 
     save_timing_csv(output_dir / "timing_comparison.csv", rows)
 

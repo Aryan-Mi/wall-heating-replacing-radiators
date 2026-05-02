@@ -1,6 +1,5 @@
 """
-Task 10: CuPy Jacobi solver with batched convergence check to eliminate
-per-iteration GPU→CPU synchronizations.
+Task 10: CuPy Jacobi solver with batched convergence check to eliminate per-iteration GPU→CPU synchronizations.
 
 CLI: python simulate_cupy_optimized.py N [data_dir]
 
@@ -8,9 +7,9 @@ Prints CSV rows to stdout, timing to stderr as TIMING_SECONDS=<value>.
 """
 
 from glob import glob
+from os.path import join
 import sys
 import time
-from os.path import join
 
 import cupy as cp
 import numpy as np
@@ -57,10 +56,7 @@ def jacobi_cupy_optimized(u, interior_mask, max_iter, atol=1e-4, check_interval=
     mask_gpu = cp.asarray(interior_mask)
 
     for i in range(max_iter):
-        u_new = 0.25 * (
-            u_gpu[1:-1, :-2] + u_gpu[1:-1, 2:]
-            + u_gpu[:-2, 1:-1] + u_gpu[2:, 1:-1]
-        )
+        u_new = 0.25 * (u_gpu[1:-1, :-2] + u_gpu[1:-1, 2:] + u_gpu[:-2, 1:-1] + u_gpu[2:, 1:-1])
 
         # Only transfer delta to CPU every check_interval iterations.
         # This reduces GPU→CPU synchronizations from up to 20,000 down to ~200,

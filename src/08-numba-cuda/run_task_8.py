@@ -1,6 +1,4 @@
-"""
-Task 8: Benchmark Numba CUDA Jacobi solver and compare to NumPy reference.
-"""
+"""Task 8: Benchmark Numba CUDA Jacobi solver and compare to NumPy reference."""
 
 from __future__ import annotations
 
@@ -41,12 +39,13 @@ def time_simulation(n_floorplans: int, data_dir: str) -> tuple[float, float]:
         if stdout:
             details.append(f"stdout:\n{stdout}")
         details_text = "\n\n".join(details) if details else "No child process output captured."
-        raise RuntimeError(
+        msg = (
             "Numba CUDA simulation subprocess failed.\n"
             f"Command: {' '.join(cmd)}\n"
             f"Return code: {exc.returncode}\n\n"
             f"{details_text}"
-        ) from exc
+        )
+        raise RuntimeError(msg) from exc
     wall = time.perf_counter() - t0
 
     internal = wall
@@ -142,7 +141,7 @@ def main() -> None:
 
     if ref_spf is not None:
         speedup = ref_spf / spf
-        print(f"\nComparison vs reference (NumPy, Task 2):")
+        print("\nComparison vs reference (NumPy, Task 2):")
         print(f"  Reference:   {ref_spf:.3f} s/floorplan")
         print(f"  Numba CUDA:  {spf:.3f} s/floorplan")
         print(f"  Speedup:     {speedup:.1f}x")

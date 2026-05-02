@@ -7,9 +7,9 @@ Prints CSV rows to stdout, timing to stderr as TIMING_SECONDS=<value>.
 """
 
 from glob import glob
+from os.path import join
 import sys
 import time
-from os.path import join
 
 import numba
 import numpy as np
